@@ -34,8 +34,7 @@ class RealmTest(ZulipTestCase):
         new_name = u'Zed You Elle Eye Pea'
         do_set_realm_property(realm, 'name', new_name)
         self.assertEqual(get_realm(realm.string_id).name, new_name)
-        user_profile = self.example_user('hamlet')
-        self.assert_user_profile_cache_gets_new_name(user_profile.email, new_name)
+        self.assert_user_profile_cache_gets_new_name('hamlet@zulip.com', new_name)
 
     def test_update_realm_name_events(self):
         # type: () -> None
@@ -69,10 +68,9 @@ class RealmTest(ZulipTestCase):
 
     def test_update_realm_description(self):
         # type: () -> None
-        user_profile = self.example_user('iago')
-        email = user_profile.email
+        email = 'iago@zulip.com'
         self.login(email)
-        realm = user_profile.realm
+        realm = get_realm('zulip')
         new_description = u'zulip dev group'
         data = dict(description=ujson.dumps(new_description))
         events = []  # type: List[Dict[str, Any]]
@@ -96,12 +94,12 @@ class RealmTest(ZulipTestCase):
         data = dict(description=ujson.dumps(new_description))
 
         # create an admin user
-        user_profile = self.example_user('iago')
-        self.login(user_profile.email)
+        email = 'iago@zulip.com'
+        self.login(email)
 
         result = self.client_patch('/json/realm', data)
         self.assert_json_error(result, 'Realm description is too long.')
-        realm = user_profile.realm
+        realm = get_realm('zulip')
         self.assertNotEqual(realm.description, new_description)
 
     def test_admin_restrictions_for_changing_realm_name(self):
@@ -149,13 +147,13 @@ class RealmTest(ZulipTestCase):
         realm = get_realm('zulip')
         self.assertNotEqual(realm.default_language, new_lang)
         # we need an admin user.
-        user_profile = self.example_user('iago')
-        self.login(user_profile.email)
+        email = 'iago@zulip.com'
+        self.login(email)
 
         req = dict(default_language=ujson.dumps(new_lang))
         result = self.client_patch('/json/realm', req)
         self.assert_json_success(result)
-        realm = user_profile.realm
+        realm = get_realm('zulip')
         self.assertEqual(realm.default_language, new_lang)
 
         # Test to make sure that when invalid languages are passed
